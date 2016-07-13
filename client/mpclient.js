@@ -2,11 +2,14 @@
  * Main game logic code
  */
 
-var context = document.getElementById("context").getContext("2d");
+var canvas = document.getElementById("canvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+var context = canvas.getContext("2d");
 
 // Define global variables
-var HEIGHT = 600;
-var WIDTH = 1200;
+var HEIGHT = window.innerHeight;
+var WIDTH = window.innerWidth;
 var worldWidth = null;
 var worldHeight = null;
 var robotCount = 0;
