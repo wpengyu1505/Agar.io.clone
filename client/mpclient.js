@@ -2,6 +2,12 @@
  * Main game logic code
  */
 
+var nameText = document.getElementById("name");
+var colorText = document.getElementById("color");
+var submitButton = document.getElementById("signIn");
+var signDiv = document.getElementById("signDiv");
+var gameDiv = document.getElementById("gameDiv");
+
 var canvas = document.getElementById("canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -147,12 +153,27 @@ var player;
 var onlinePlayerList = {};
 var foodList = {};
 var socket = io();
+
+submitButton.onclick = function(){
+    socket.emit('signIn',{name:nameText.value,color:colorText.value});
+}
+
 socket.on('init', function(data) {
 	player = new Player(data.player);
 	ID = player.id;
 	worldWidth = data.worldWidth;
 	worldHeight = data.worldHeight;
 	console.log("Player initialized " + ID);
+	
+	document.onmousemove = function(mouse) {
+		mouseX = Math.round(mouse.clientX);
+		mouseY = Math.round(mouse.clientY);
+		socket.emit('updateSpeed', player.updateSpeed());
+	}
+	
+    signDiv.style.display = 'none';
+    gameDiv.style.display = 'inline-block';
+
 });
 
 socket.on('update', function(data) {
@@ -199,11 +220,6 @@ socket.on('deleteFood', function(data) {
 //Track the mouse location
 var mouseX = 0;
 var mouseY = 0;
-document.onmousemove = function(mouse) {
-	mouseX = Math.round(mouse.clientX);
-	mouseY = Math.round(mouse.clientY);
-	socket.emit('updateSpeed', player.updateSpeed());
-}
 
 //document.onclick = function(mouse) {
 //	player.mass = player.mass * 2;

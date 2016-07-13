@@ -81,29 +81,30 @@ io.sockets.on('connection', function(socket){
 	//var id = address + '.' + Math.abs(Math.round(Math.random() * 1000));
 	var id = connectionId ++;
 	socket.id = id;
-	socket.x = 0;
-	socket.y = 0;
-	SOCKET_LIST[id] = socket;
-	PLAYER_LIST[id] = new PlayerData(id, 100, 100, 5, 100, 'Hadoop', 'green');
-	socket.emit('init', {
-		player: PLAYER_LIST[id],
-		worldWidth: WORLD_WIDTH,
-		worldHeight: WORLD_HEIGHT
+	socket.on('signIn', function(data) {
+		SOCKET_LIST[id] = socket;
+		PLAYER_LIST[id] = new PlayerData(id, 100, 100, 5, 100, data.name, data.color);
+		socket.emit('init', {
+			player: PLAYER_LIST[id],
+			worldWidth: WORLD_WIDTH,
+			worldHeight: WORLD_HEIGHT
+		});
+		
+		for (var i in FOOD_LIST) {
+			socket.emit('addFood', FOOD_LIST[i]);
+		}
+		
+		socket.on('disconnect', function() {
+			delete SOCKET_LIST[socket.id];
+			delete PLAYER_LIST[socket.id];
+			deletePack.push(socket.id);
+		});
+		
+		socket.on('updateSpeed', function(data) {
+			PLAYER_LIST[socket.id].updateSpeed(data.speedX, data.speedY);
+		});		
 	});
-	
-	for (var i in FOOD_LIST) {
-		socket.emit('addFood', FOOD_LIST[i]);
-	}
-	
-	socket.on('disconnect', function() {
-		delete SOCKET_LIST[socket.id];
-		delete PLAYER_LIST[socket.id];
-		deletePack.push(socket.id);
-	});
-	
-	socket.on('updateSpeed', function(data) {
-		PLAYER_LIST[socket.id].updateSpeed(data.speedX, data.speedY);
-	});
+
 });
 
 function emitPackets() {
