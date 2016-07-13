@@ -6,6 +6,7 @@ function PlayerData(id, x, y, speed, mass, name, color) {
 	this.mass = mass;
 	this.name = name;
 	this.color = color;
+	this.alive = true;
 	
 	// Zero the speed when initializing
 	this.speedX = 0;
@@ -25,11 +26,8 @@ function PlayerData(id, x, y, speed, mass, name, color) {
 		if (this.posX <= this.radius) this.posX = this.radius;
 		if (this.posY >= WORLD_HEIGHT - this.radius) this.posY = WORLD_HEIGHT - this.radius;
 		if (this.posY <= this.radius) this.posY = this.radius;
-		if ((this.posX >= WORLD_WIDTH - this.radius) || (this.posX <= this.radius) || (this.posY >= WORLD_HEIGHT - this.radius) || (this.posY <= this.radius)) {
-			console.log("Boundary reached");
-		}
 	}
-	
+
 	this.updateSpeed = function(speedX, speedY) {
 		//console.log("speed is updated");
 		this.speedX = speedX;
@@ -38,6 +36,10 @@ function PlayerData(id, x, y, speed, mass, name, color) {
 	
 	this.addMass = function(delta) {
 		this.mass += delta;
+	}	
+	
+	this.die = function() {
+		this.alive = false;
 	}
 }
 
@@ -107,11 +109,18 @@ io.sockets.on('connection', function(socket){
 function emitPackets() {
 	for (var i in SOCKET_LIST) {
 		var socket = SOCKET_LIST[i];
-		PLAYER_LIST[i].update();
-		
-		// See if any player can eat
-		eatNearbyFood(PLAYER_LIST[i]);
-		updatePack.push(PLAYER_LIST[i]);
+		if (PLAYER_LIST[i].alive) {
+			PLAYER_LIST[i].update();
+			// See if any player can eat
+			eatNearbyFood(PLAYER_LIST[i]);
+			prepareToEatOthers(PLAYER_LIST[i]);
+			updatePack.push(PLAYER_LIST[i]);
+			
+		} else {
+			delete SOCKET_LIST[i];
+			delete PLAYER_LIST[i];
+			deletePack.push(i);
+		}
 	}
 
 	propogatePacket('update', updatePack);
@@ -149,6 +158,16 @@ function eatNearbyFood(player) {
 	}
 }
 
+function prepareToEatOthers(player) {
+	for (var i in PLAYER_LIST) {
+		var enemy = PLAYER_LIST[i];
+		if (enemy.id !== player.id && enemy.alive && enemyIsEatable(player, enemy)) {
+			enemy.die();
+			player.addMass(enemy.mass);
+			console.log('Player ' + enemy.id + ' is eaten');
+		}
+	}
+}
 
 function propogatePacket(message, packet) {
 	for (var i in SOCKET_LIST) {
