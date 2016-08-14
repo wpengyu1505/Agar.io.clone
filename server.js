@@ -123,14 +123,19 @@ function emitPackets() {
             updatePack.push(PLAYER_LIST[i]);
 
         } else {
-            delete SOCKET_LIST[i];
-            delete PLAYER_LIST[i];
             deletePack.push(i);
         }
     }
 
     propogatePacket('update', updatePack);
-    propogatePacket('delete', deletePack);
+    if (deletePack.length > 0) {
+        propogatePacket('delete', deletePack);
+    }
+    
+    for (var i = 0; i < deletePack.length; i ++) {
+        delete SOCKET_LIST[deletePack[i]];
+        delete PLAYER_LIST[deletePack[i]];
+    }
 
     // clear packets
     updatePack = [];
@@ -138,11 +143,13 @@ function emitPackets() {
 }
 
 function generateFood() {
-    var food = new Food(foodId, Math.round(Math.random() * WORLD_WIDTH), Math
+    if (hashSize(FOOD_LIST) <= 100) {
+        var food = new Food(foodId, Math.round(Math.random() * WORLD_WIDTH), Math
             .round(Math.random() * WORLD_HEIGHT));
-    FOOD_LIST[foodId] = food;
-    foodId++;
-    propogatePacket('addFood', food);
+        FOOD_LIST[foodId] = food;
+        foodId++;
+        propogatePacket('addFood', food);
+    }
 }
 
 function enemyIsEatable(player, enemy) {
@@ -202,4 +209,12 @@ function getMapSize(map) {
 function printPlayer(player) {
     console.log(player.name + '|' + player.posX + '|' + player.posY + '|'
             + player.mass);
+}
+
+function hashSize(hash) {
+    var size = 0
+    for (var i in hash) {
+        size ++
+    }
+    return size
 }

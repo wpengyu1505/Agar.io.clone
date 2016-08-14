@@ -169,11 +169,14 @@ socket.on('init', function(data) {
     worldWidth = data.worldWidth;
     worldHeight = data.worldHeight;
     console.log("Player initialized " + ID);
+    online = true;
 
     document.onmousemove = function(mouse) {
-        mouseX = Math.round(mouse.clientX);
-        mouseY = Math.round(mouse.clientY);
-        socket.emit('updateSpeed', player.updateSpeed());
+        if (online) {
+            mouseX = Math.round(mouse.clientX);
+            mouseY = Math.round(mouse.clientY);
+            socket.emit('updateSpeed', player.updateSpeed());
+        }
     }
 
     signDiv.style.display = 'none';
@@ -207,7 +210,14 @@ socket.on('update', function(data) {
 });
 
 socket.on('delete', function(data) {
-    // console.log('delete is received');
+    console.log('Deleted player: ' + data + ' compare ' + ID)
+    if (data == ID) {
+        //online = false
+        console.log('Sorry you are eaten ... Please try again')
+        canvas.remove()
+    } else {
+        console.log('Are you still here ' + data)
+    }
     delete onlinePlayerList[data];
 });
 
