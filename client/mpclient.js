@@ -215,6 +215,8 @@ socket.on('delete', function(data) {
         //online = false
         console.log('Sorry you are eaten ... Please try again')
         canvas.remove()
+        window.location.reload()
+        signDiv.style.display = 'inline';
     } else {
         console.log('Are you still here ' + data)
     }
